@@ -13,17 +13,24 @@ class Square():
 
 
 class Grid():
+    """Grid class
 
-    def __init__(self, SIZE, NUM_MINES):
-        self.mines = np.ndarray((2, NUM_MINES), dtype=np.dtype(int))
+    Produces numerical grid in memory with numpy
+
+    Strictly numerical representation of the grid"""
+
+    def __init__(self, size, num_mines):
+        self.num_mines = num_mines
+        self.size = size
+        self.mines = np.ndarray((2, num_mines), dtype=np.dtype(int))
         self.placed = set()
-        # instantiate the grid, a SIZE by SIZE 2-d array. The grid should be indexed self.grid[y][x] -> some Square instance at point (x,y)
-        self.grid = np.ndarray((SIZE, SIZE), dtype=np.dtype(object))
+        # initialize the grid, a SIZE by SIZE 2-d array. The grid should be indexed self.grid[y][x] -> some Square instance at point (x,y)
+        self.grid = np.ndarray((size, size), dtype=np.dtype(object))
 
         # creates mines at random
-        for i in range(NUM_MINES):
-            rand_x = random.randint(0, SIZE-1)  # gives mine a random x value
-            rand_y = random.randint(0, SIZE-1)  # gives mine a random y value
+        for i in range(num_mines):
+            rand_x = random.randint(0, size-1)  # gives mine a random x value
+            rand_y = random.randint(0, size-1)  # gives mine a random y value
             # in the 2-d array self.mines, the array at row 0 will hold the x-values for each mine
             self.mines[0][i] = rand_x
             # the array at row 1 will hold the y-values for each mine, the mines are indexed 0 through NUM_MINES - 1
@@ -33,8 +40,8 @@ class Grid():
             # checks to make sure the randomly generated x and y have not already been given to a mine, not likely but possible
             while (self.mines[0][i], self.mines[1][i]) in self.placed:
                 # if the point was given already, create new random x and y values
-                rand_x = random.randint(0, SIZE-1)
-                rand_y = random.randint(0, SIZE-1)
+                rand_x = random.randint(0, size-1)
+                rand_y = random.randint(0, size-1)
                 self.mines[0][i] = rand_x
                 self.mines[1][i] = rand_y
 
@@ -46,8 +53,9 @@ class Grid():
 
         x_change = [-1, 1, 0]
         y_change = [-1, 1, 0]
-        for row in range(SIZE):  # iterate through each row
-            for col in range(SIZE):     # iterate through each column
+        for row in range(size):  # iterate through each row
+            for col in range(size):     # iterate through each column
+
                 # at each iteration (each square), check if the point is not a mine
                 if (col, row) not in self.placed:
                     neighbors = 0  # counter for # of neighbors that are mines

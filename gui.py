@@ -37,7 +37,9 @@ class MineSweeperGUI(Tk):
 
     inhereits tkinter
 
-    responsible for displaying the game"""
+    responsible for displaying the game
+
+    house visual representation of the grid"""
 
     class Tile(Frame):
         """Tile class
@@ -181,13 +183,16 @@ class MineSweeperGUI(Tk):
 
     def explosion(self):
         """Method to uncover every mine in the grid if one mine is clicked on."""
-        """for i in range(NUM_MINES):  # iterate through the total number of mines
+        for i in range(self.grid.num_mines):  # iterate through the total number of mines
+
             # get the x value for the mine at the given iteration
-            x_val = self.mines[0][i]
-            y_val = self.mines[1][i]    # get the y value for the same mine
+            x_val = self.grid.mines[0][i]
+            # get the y value for the same mine
+            y_val = self.grid.mines[1][i]
+
             # uncover the square at the given x and y values
-            self.grid[y_val][x_val].click()
-        """
+            self.tiles[y_val][x_val].uncover()
+
         # TODO Add animation to this method so that the mines are uncover in a cool, explosive manner
 
     def zeros(self, square):
