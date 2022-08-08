@@ -29,6 +29,7 @@ ZERO_COLOR = "#CCCCCC"
 FLAG_PATH = "flag.jpeg"
 SQUARE_SIZE = 25
 WINDOW_SIZE = SIZE * SQUARE_SIZE * 2
+MINE_COLORS = []
 
 
 class MineSweeperGUI(Tk):
@@ -60,7 +61,7 @@ class MineSweeperGUI(Tk):
             self.y = y
             if self.square.mine == 9:   # if the Square is a mine, have it show * instead of a number to represent a mine
                 self.label = Label(
-                    self, text="*", fg=TEXT_COLOR, bg="white")
+                    self, text="*", fg=TEXT_COLOR, bg="white", font=("Helvetica bold", ))
                 self.configure(bg="#0000FF")
             elif self.square.mine == 0:
                 self.label = Label(self, bg="#CCCCCC")
@@ -170,7 +171,7 @@ class MineSweeperGUI(Tk):
     def play(self, num):
         for child in self.winfo_children():
             child.destroy()
-        self.grid = Grid(num, num*2)
+        self.grid = Grid(num, num*3)
         self.tiles = np.ndarray((num, num), dtype=np.dtype(object))
         for row in range(num):
             for col in range(num):
@@ -191,7 +192,7 @@ class MineSweeperGUI(Tk):
 
     def zeros(self, square):
         """Method to uncover the neighboring squares that are zeros when a zero is clicked"""
-        """visited = set()
+        visited = set()
         x_change = [-1, 1, 0]
         y_change = [-1, 1, 0]
 
@@ -202,18 +203,17 @@ class MineSweeperGUI(Tk):
                 for col in x_change:
                     try:
                         # make sure node is in grid
-                        neighbor = self.grid[node.y + row][node.x+col]
+                        neighbor = self.tiles[node.y + row][node.x+col]
                     except:
                         pass
                     else:
                         if node.y + row < 0 or node.x + col < 0:
                             pass
-                        elif neighbor.mine == 0:
+                        elif neighbor.square.mine == 0:
                             neighbor.uncover()
                             visited.add(node)
-                            bfs(neighbor)
-                        elif neighbor.mine != 9:
+                            bfs(neighbor.square)
+                        elif neighbor.square.mine != 9:
                             neighbor.uncover()
 
-        bfs(square)
-        """
+        bfs(square.square)
