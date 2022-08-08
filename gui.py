@@ -73,14 +73,15 @@ class MineSweeperGUI(Tk):
             # event handler to handle the Button-1 event which is a noormal click on the square. THis calles the function self.click()
             self.bind("<Button-1>", lambda event: self.click())
             # event handler to show flag on right click
-            self.bind("<Button-3>", lambda event: self.right_click())
+            self.bind("<Button-2>", lambda event: self.right_click())
 
         def click(self):
             """Method to handle the click event on the Square
 
             """
-
-            if self.square.covered:
+            if self.square.flag:
+                pass
+            elif self.square.covered:
                 if self.square.flag:
                     self.flag_label.grid_forget()
                 if self.square.mine == 0:
@@ -98,10 +99,10 @@ class MineSweeperGUI(Tk):
             """Method to update the flag value of a Square"""
             if self.square.covered:    # prevents flagging the square if uncovered
                 if self.square.flag:
-                    self.configure(bg=FLAG_COLOR)
+                    self.configure(bg=COVERED_COLOR)
                     self.square.flag = False
                 else:
-                    self.configure(bg=COVERED_COLOR)
+                    self.configure(bg=FLAG_COLOR)
                     self.square.flag = True
 
             # TODO create animation to nicely add a flag to the square or remove the flag
