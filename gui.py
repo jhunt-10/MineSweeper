@@ -36,7 +36,7 @@ HIGHLIGHT_GREEN = "#68FF60"
 HIGHLIGHT_TAN = "#F4E9AF"
 DARK_TEXT = "#3B448C"
 LIGHT_TEXT = "#6E7CEE"
-SQUARE_SIZE = 14
+SQUARE_SIZE = 9
 WINDOW_SIZE = 900
 MINE_COLORS = ["#0A48FB", "#1DD300", "#CA0000",
                "#8A09DD", "#7D0000", "#09EFE3", "#000000", "#888888"]
@@ -82,7 +82,7 @@ class MineSweeperGUI(Tk):
             if self.square.mine == 9:   # if the Square is a mine, have it show * instead of a number to represent a mine
                 self.label = Label(
                     self, image=master.bomb_image)  # TODO add functionality to change bomb image size based on difficluty, do this not here though, just change master.bomb_image
-                self.label.configure(bg="#0000FF")
+                self.configure(bg="#0000FF")
             elif self.square.mine == 0:
                 self.label = Label(self, bg=self.uncovered_color)
             else:   # if the Square is not a mine have it show the number of mines it touches
@@ -99,6 +99,11 @@ class MineSweeperGUI(Tk):
             self.bind("<Enter>", lambda event: self.highlight())
 
             self.bind("<Leave>", lambda event: self.leave())
+
+            for child in self.winfo_children():
+                binds = list(child.bindtags())
+                binds.insert(1, self)
+                child.bindtags(tuple(binds))
 
         def click(self):
             """Method to handle the click event on the Square
@@ -121,13 +126,17 @@ class MineSweeperGUI(Tk):
                 elif self.square.mine == 0:
                     self.master.zeros(self)
             elif self.square.mine > 0:
-                print("here")
+                # part of click that handles a click on an uncovered tile
+                # looks at each neighbor to that tile and tallies the total number of flagged neighbors
+                # if the total number of flagged neighbors is equal to the mine number of the tile the each neighbor of the tile is revelead
                 x_change = [-1, 1, 0]
                 y_change = [-1, 1, 0]
                 neighbors = set()
                 flags = 0
                 for row in y_change:
                     for col in x_change:
+                        if col == 0 and row == 0:
+                            break
                         try:
                             # make sure node is in grid
                             neighbor = self.master.tiles[self.y +
@@ -182,8 +191,12 @@ class MineSweeperGUI(Tk):
             elif self.square.mine == 9:
                 self.master.explosion()
                 return True
+            elif self.square.mine == 0:
+                self.master.zeros(self)
+                return True
             self.label.grid(sticky="nsew", row=0, column=1)
             self.square.covered = False
+            return False
 
         def uncover(self):
             """Method to reveal the value of the square when clicked"""
@@ -258,6 +271,10 @@ class MineSweeperGUI(Tk):
                         obj=holder: self.leave(obj))
             holder.bind("<Button-1>", lambda event,
                         num=dif_number, dif_num=dif: click(num, dif_num))
+            for child in holder.winfo_children():
+                binds = list(child.bindtags())
+                binds.insert(1, holder)
+                child.bindtags(tuple(binds))
 
     def play(self, num, dif_number):
         for child in self.winfo_children():
@@ -267,7 +284,7 @@ class MineSweeperGUI(Tk):
         for row in range(num):
             for col in range(num):
                 self.tiles[row][col] = self.Tile(
-                    self, SQUARE_SIZE*(3-dif_number), col, row, self.flag_image, self.grid.grid[row][col], dif_number)
+                    self, SQUARE_SIZE*(3-dif_number) + 10, col, row, self.flag_image, self.grid.grid[row][col], dif_number)
                 self.tiles[row][col].grid(row=row, column=col)
 
     def explosion(self):
