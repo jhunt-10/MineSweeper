@@ -34,6 +34,8 @@ TAN1 = "#C3BA8C"
 TAN2 = "#DFD59F"
 HIGHLIGHT_GREEN = "#68FF60"
 HIGHLIGHT_TAN = "#F4E9AF"
+DARK_TEXT = "#3B448C"
+LIGHT_TEXT = "#6E7CEE"
 SQUARE_SIZE = 14
 WINDOW_SIZE = 900
 MINE_COLORS = ["#0A48FB", "#1DD300", "#CA0000",
@@ -83,7 +85,7 @@ class MineSweeperGUI(Tk):
                 self.label.configure(bg="#0000FF")
             elif self.square.mine == 0:
                 self.label = Label(self, bg=self.uncovered_color)
-            else:   # if teh Square is not a mine have it show the number of mines it touches
+            else:   # if the Square is not a mine have it show the number of mines it touches
                 self.label = Label(
                     self, text=str(self.square.mine), fg=MINE_COLORS[self.square.mine-1], bg=self.uncovered_color, font=("Helvetica bold", 12*(3-dif_num)))
             # Label object to display the FLAG_IMAGE when right clicked
@@ -110,7 +112,7 @@ class MineSweeperGUI(Tk):
                 self.configure(bg=self.uncovered_color)
 
                 if self.square.mine != 9 and self.square.mine != 0:
-                    Frame(self, width=4, bg=self.uncovered_color).grid(
+                    Frame(self, width=4, height=10,  bg=self.uncovered_color).grid(
                         row=1, column=0)
                 self.label.grid(sticky="nsew", row=0, column=1)
                 self.square.covered = False
@@ -118,6 +120,32 @@ class MineSweeperGUI(Tk):
                     self.master.explosion()
                 elif self.square.mine == 0:
                     self.master.zeros(self)
+            elif self.square.mine > 0:
+                print("here")
+                x_change = [-1, 1, 0]
+                y_change = [-1, 1, 0]
+                neighbors = set()
+                flags = 0
+                for row in y_change:
+                    for col in x_change:
+                        try:
+                            # make sure node is in grid
+                            neighbor = self.master.tiles[self.y +
+                                                         row][self.x+col]
+                        except Exception():
+                            # index error caught, do nothing
+                            pass
+                        else:
+                            if self.y + row < 0 or self.x + col < 0:
+                                pass
+                            elif neighbor.square.flag:
+                                flags += 1
+                            else:
+                                neighbors.add(neighbor)
+                if flags == self.square.mine:
+                    for neigh in neighbors:
+                        if neigh.reveal():
+                            break
 
         def highlight(self):
             if self.square.covered and not self.square.flag:
@@ -146,6 +174,17 @@ class MineSweeperGUI(Tk):
                     self.square.flag = True
 
             # TODO create animation to nicely add a flag to the square or remove the flag
+
+        def reveal(self):
+            self.configure(bg=self.uncovered_color)
+            if self.square.mine != 9 and self.square.mine != 0:
+                Frame(self, width=4).grid(row=1, column=0)
+            elif self.square.mine == 9:
+                self.master.explosion()
+                return True
+            self.label.grid(sticky="nsew", row=0, column=1)
+            self.square.covered = False
+
         def uncover(self):
             """Method to reveal the value of the square when clicked"""
             if self.square.covered:
@@ -173,39 +212,52 @@ class MineSweeperGUI(Tk):
 
     def highlight(self, obj):
         for child in obj.winfo_children():
-            child.configure(bg="#00FF00", fg="white")
-        obj.configure(bg="#00FF00", highlightbackground="#013f28")
+            child.configure(bg=TAN2, fg=LIGHT_TEXT)
+        obj.configure(bg=TAN2, highlightbackground=TAN1)
 
     def leave(self, obj):
         for child in obj.winfo_children():
-            child.configure(bg="#FFFFFF", fg="black")
-        obj.configure(bg="#FFFFFF", highlightbackground="#00FF00")
+            child.configure(bg=TAN1, fg=DARK_TEXT)
+        obj.configure(bg=TAN1, highlightbackground=TAN2)
 
     def start(self):
         def click(num, dif_num):
             # create new grid with num size and at least num * 2 mines
             self.play(num, dif_num)
-        big_frame = Frame(self, width=WINDOW_SIZE, height=WINDOW_SIZE,
-                          padx=WINDOW_SIZE/5, pady=WINDOW_SIZE/5)
-        big_frame.grid()
-        big_frame.grid_propagate(False)
-        difficulties = ["Easy", "Medium", "Hard", 15, 30, 45]
+        for row in range(6):
+            for col in range(6):
+                if (col % 2 == 0 and row % 2 == 0) or (col % 2 == 1 and row % 2 == 1):
+                    color = GREEN1
+                else:
+                    color = GREEN2
+                Frame(self, width=170, height=170, bg=color).grid(
+                    row=row, column=col)
+        difficulties = ["EASY", "MEDIUM", "HARD", 15, 30, 45]
+        positions = [200, 362, 550]
         for dif in range(3):
-            difficulty_frame = Frame(
-                big_frame, width=150, height=100, highlightbackground="#00FF00", highlightthickness=2, bg="white")
-            difficulty_label = Label(
-                difficulty_frame, text=difficulties[dif], fg="black", bg="white", font=("Helevetica", 25))
-            dif_number = difficulties[dif+3]
-            difficulty_label.grid()
+            holder = Frame(self, bg=TAN1, highlightbackground=TAN2,
+                           highlightthickness=4, relief="ridge")
+            # creates a frame to display the varying difficulties
 
-            difficulty_frame.grid(column=dif, padx=20, row=0)
-            difficulty_frame.grid_propagate(False)
-            difficulty_frame.bind("<Enter>", lambda event,
-                                  obj=difficulty_frame: self.highlight(obj))
-            difficulty_frame.bind("<Leave>", lambda event,
-                                  obj=difficulty_frame: self.leave(obj))
-            difficulty_frame.bind("<Button-1>", lambda event,
-                                  num=dif_number, dif_num=dif: click(num, dif_num))
+            # creates a label to display the text for each difficulty
+            difficulty_label = Label(
+                holder, text=difficulties[dif], fg=DARK_TEXT, bg=TAN1, font=("Poppins bold", 38))
+            # variable to keep track of the difficulty 0 through 2
+            dif_number = difficulties[dif+3]
+
+            # shows the label
+            difficulty_label.grid(column=1, padx=10, pady=15)
+
+            # grids the frame with the lowest difficulty being leftmost and highest rightmost
+            holder.place(x=positions[dif], y=400)
+
+            # event that changes the color of the frame when the mouse enters
+            holder.bind("<Enter>", lambda event,
+                        obj=holder: self.highlight(obj))
+            holder.bind("<Leave>", lambda event,
+                        obj=holder: self.leave(obj))
+            holder.bind("<Button-1>", lambda event,
+                        num=dif_number, dif_num=dif: click(num, dif_num))
 
     def play(self, num, dif_number):
         for child in self.winfo_children():
