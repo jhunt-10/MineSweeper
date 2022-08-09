@@ -11,6 +11,9 @@ class Square():
         self.covered = True
         self.flag = False
 
+    def flagger(self, flag):
+        self.flag = flag
+
 
 class Grid():
     """Grid class
@@ -24,6 +27,7 @@ class Grid():
         self.size = size
         self.mines = np.ndarray((2, num_mines), dtype=np.dtype(int))
         self.placed = set()
+        self.total_flags = 0
         # initialize the grid, a SIZE by SIZE 2-d array. The grid should be indexed self.grid[y][x] -> some Square instance at point (x,y)
         self.grid = np.ndarray((size, size), dtype=np.dtype(object))
 

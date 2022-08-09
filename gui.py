@@ -11,10 +11,11 @@ Ethan is so bot :/
 
 """
 import random
-from tkinter import Tk, Frame, Label
+from tkinter import Tk, Frame, Label, StringVar
 import numpy as np
 from PIL import Image, ImageTk
 from grid import Grid, Square
+import datetime
 
 
 SIZE = 20    # fixed size of grid
@@ -27,9 +28,10 @@ UNCOVERED_COLOR = "#FFFFFF"
 FLAG_COLOR = "#FF0000"
 ZERO_COLOR = "#CCCCCC"
 FLAG_PATH = "flag.jpeg"
-BOMB_PATH = "bomb.jpeg"
+BOMB_PATHS = ["bombc3.png", "bomb2.png", "bomb1.png"]
 GREEN1 = "#20B718"
 GREEN2 = "#28E41E"
+MENU_COLOR = "#134B00"
 TAN1 = "#C3BA8C"
 TAN2 = "#DFD59F"
 HIGHLIGHT_GREEN = "#68FF60"
@@ -38,7 +40,7 @@ DARK_TEXT = "#3B448C"
 LIGHT_TEXT = "#6E7CEE"
 SQUARE_SIZE = 9
 WINDOW_SIZE = 900
-MINE_COLORS = ["#0A48FB", "#1DD300", "#CA0000",
+MINE_COLORS = ["#0A48FB", "#34781C", "#CA0000",
                "#8A09DD", "#7D0000", "#09EFE3", "#000000", "#888888"]
 
 
@@ -75,19 +77,24 @@ class MineSweeperGUI(Tk):
             self.grid_propagate(False)
             self.covered_color = color
             self.uncovered_color = ucolor
-
+            self.bomb_image = master.master.master.bomb_image
             self.square = square
             self.x = x
             self.y = y
             if self.square.mine == 9:   # if the Square is a mine, have it show * instead of a number to represent a mine
                 self.label = Label(
-                    self, image=master.bomb_image)  # TODO add functionality to change bomb image size based on difficluty, do this not here though, just change master.bomb_image
+                    self, image=self.bomb_image, bg=self.uncovered_color)  # TODO add functionality to change bomb image size based on difficluty, do this not here though, just change master.bomb_image
                 self.configure(bg="#0000FF")
+                self.covered_color = "#0000FF"
             elif self.square.mine == 0:
                 self.label = Label(self, bg=self.uncovered_color)
             else:   # if the Square is not a mine have it show the number of mines it touches
+                if dif_num == -2:
+                    self.text_size = 45
+                else:
+                    self.text_size = 12*(3-dif_num)
                 self.label = Label(
-                    self, text=str(self.square.mine), fg=MINE_COLORS[self.square.mine-1], bg=self.uncovered_color, font=("Helvetica bold", 12*(3-dif_num)))
+                    self, text=str(self.square.mine), fg=MINE_COLORS[self.square.mine-1], bg=self.uncovered_color, font=("Helvetica bold", self.text_size))
             # Label object to display the FLAG_IMAGE when right clicked
             self.flag_label = Label(self, image=flag_image)
 
@@ -105,6 +112,10 @@ class MineSweeperGUI(Tk):
                 binds.insert(1, self)
                 child.bindtags(tuple(binds))
 
+        def __hash__(self):
+            num_x = self.master.size
+            return num_x * self.y + self.y
+
         def click(self):
             """Method to handle the click event on the Square
 
@@ -112,8 +123,6 @@ class MineSweeperGUI(Tk):
             if self.square.flag:
                 pass
             elif self.square.covered:
-                if self.square.flag:
-                    self.flag_label.grid_forget()
                 self.configure(bg=self.uncovered_color)
 
                 if self.square.mine != 9 and self.square.mine != 0:
@@ -122,16 +131,16 @@ class MineSweeperGUI(Tk):
                 self.label.grid(sticky="nsew", row=0, column=1)
                 self.square.covered = False
                 if self.square.mine == 9:
-                    self.master.explosion()
+                    self.master.master.master.explosion()
                 elif self.square.mine == 0:
-                    self.master.zeros(self)
+                    self.master.master.master.zeros(self)
             elif self.square.mine > 0:
                 # part of click that handles a click on an uncovered tile
                 # looks at each neighbor to that tile and tallies the total number of flagged neighbors
                 # if the total number of flagged neighbors is equal to the mine number of the tile the each neighbor of the tile is revelead
                 x_change = [-1, 1, 0]
                 y_change = [-1, 1, 0]
-                neighbors = set()
+                neighbors = []
                 flags = 0
                 for row in y_change:
                     for col in x_change:
@@ -139,9 +148,9 @@ class MineSweeperGUI(Tk):
                             break
                         try:
                             # make sure node is in grid
-                            neighbor = self.master.tiles[self.y +
-                                                         row][self.x+col]
-                        except Exception():
+                            neighbor = self.master.master.master.tiles[self.y +
+                                                                       row][self.x+col]
+                        except:
                             # index error caught, do nothing
                             pass
                         else:
@@ -150,7 +159,7 @@ class MineSweeperGUI(Tk):
                             elif neighbor.square.flag:
                                 flags += 1
                             else:
-                                neighbors.add(neighbor)
+                                neighbors.append(neighbor)
                 if flags == self.square.mine:
                     for neigh in neighbors:
                         if neigh.reveal():
@@ -177,10 +186,14 @@ class MineSweeperGUI(Tk):
             if self.square.covered:    # prevents flagging the square if uncovered
                 if self.square.flag:
                     self.configure(bg=self.covered_color)
-                    self.square.flag = False
+                    self.square.flagger(False)
+                    self.master.master.master.grid.total_flags -= 1
+                    self.master.master.master.update_flags(-1)
                 else:
                     self.configure(bg=FLAG_COLOR)
-                    self.square.flag = True
+                    self.square.flagger(True)
+                    self.master.master.master.grid.total_flags += 1
+                    self.master.master.master.update_flags(1)
 
             # TODO create animation to nicely add a flag to the square or remove the flag
 
@@ -189,10 +202,10 @@ class MineSweeperGUI(Tk):
             if self.square.mine != 9 and self.square.mine != 0:
                 Frame(self, width=4).grid(row=1, column=0)
             elif self.square.mine == 9:
-                self.master.explosion()
+                self.master.master.master.explosion()
                 return True
             elif self.square.mine == 0:
-                self.master.zeros(self)
+                self.master.master.master.zeros(self)
                 return True
             self.label.grid(sticky="nsew", row=0, column=1)
             self.square.covered = False
@@ -209,18 +222,43 @@ class MineSweeperGUI(Tk):
                 self.label.grid(sticky="nsew", row=0, column=1)
                 self.square.covered = False
 
+    class Timer():
+        def __init__(self, master):
+            self.master = master
+            self.stop = False
+            self.timer = 0.0
+
+        def stopwatch(self):
+            self.timer = 0.0
+            start_time = 0.0
+            while not self.stop:
+                start_time = float(str(datetime.datetime.now()).split(":")[2])
+                cur_sec = float(str(datetime.datetime.now()).split(":")[2])
+                while cur_sec < start_time + 1.0:
+                    if start_time + 1.0 >= 59.9:
+                        if cur_sec >= 0.9:
+                            break
+                    cur_sec = float(str(datetime.datetime.now()).split(":")[2])
+                self.timer += 1.0
+                self.master.change_time(self.timer)
+
+    def stopper(self):
+        self.stop = True
+        self.timer = 0.0
+
     def __init__(self):
         super().__init__()  # inititalizes all instances values for a typical TK root window
 
         self.flag_image = ImageTk.PhotoImage(Image.open(FLAG_PATH))
-        self.bomb_image = ImageTk.PhotoImage(Image.open(BOMB_PATH))
+        self.bomb_image = None
 
         self.title("Mine Sweeper")  # sets the title of the window
         # constrains the size of the window
-        self.geometry(f"{WINDOW_SIZE}x{WINDOW_SIZE}")
+        self.geometry(f"{WINDOW_SIZE+400}x{WINDOW_SIZE}")
         # create 2-d array to represnet the x and y values of each mine
         self.grid = None
         self.tiles = None
+        self.flag_place = 0
         self.start()
 
     def highlight(self, obj):
@@ -276,15 +314,48 @@ class MineSweeperGUI(Tk):
                 binds.insert(1, holder)
                 child.bindtags(tuple(binds))
 
+    def update_flags(self, increment):
+        self.flag_place += increment
+        self.flags.set(str(self.flag_place))
+
+    def change_time(self, time):
+        self.timer_view.set(str(time))
+
     def play(self, num, dif_number):
         for child in self.winfo_children():
             child.destroy()
+        self.bomb_image = ImageTk.PhotoImage(
+            Image.open(BOMB_PATHS[dif_number]))
         self.grid = Grid(num, num*3*(dif_number+1))
         self.tiles = np.ndarray((num, num), dtype=np.dtype(object))
+        self.size = num
+        self.body = Frame(self, bg=MENU_COLOR)
+        self.grid_frame = Frame(self.body, bg=MENU_COLOR)
+        self.flags = StringVar(self)
+
+        self.timer_view = StringVar(self)
+        self.timer_view.set(0.0)
+        self.menu_frame = Frame(
+            self.body, bg=MENU_COLOR, width=200, height=900)
+        self.flags_label = Label(
+            self.menu_frame, text="Flags Placed:",  font=("Poppins", 23), fg=LIGHT_TEXT, bg=MENU_COLOR)
+        self.flags_number = Label(
+            self.menu_frame,  font=("Poppins", 23), fg=LIGHT_TEXT, textvariable=self.flags, bg=MENU_COLOR)
+        self.tiemr_view_label = Label(self.menu_frame,  font=(
+            "Poppins", 23), fg=LIGHT_TEXT, textvariable=self.timer_view, bg=MENU_COLOR)
+        self.flags_label.grid(pady=20)
+        self.flags_number.grid(column=1, padx=10, pady=20)
+        self.body.grid()
+        self.grid_frame.grid(column=0, row=0, sticky="nw")
+        self.menu_frame.grid(column=1, row=0)
+        self.menu_frame.grid_propagate(False)
+
         for row in range(num):
             for col in range(num):
-                self.tiles[row][col] = self.Tile(
-                    self, SQUARE_SIZE*(3-dif_number) + 10, col, row, self.flag_image, self.grid.grid[row][col], dif_number)
+                if dif_number == 0:
+                    dif_number = -2
+                self.tiles[row][col] = self.Tile(self.grid_frame, SQUARE_SIZE*(
+                    3-dif_number) + 10, col, row, self.flag_image, self.grid.grid[row][col], dif_number)
                 self.tiles[row][col].grid(row=row, column=col)
 
     def explosion(self):
