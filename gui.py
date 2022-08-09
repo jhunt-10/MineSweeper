@@ -85,7 +85,7 @@ class MineSweeperGUI(Tk):
                 self.label = Label(self, bg=self.uncovered_color)
             else:   # if teh Square is not a mine have it show the number of mines it touches
                 self.label = Label(
-                    self, text=str(self.square.mine), fg=MINE_COLORS[self.square.mine-1], bg=self.uncovered_color, font=("Helvetica bold", 15*(3-dif_num)))
+                    self, text=str(self.square.mine), fg=MINE_COLORS[self.square.mine-1], bg=self.uncovered_color, font=("Helvetica bold", 12*(3-dif_num)))
             # Label object to display the FLAG_IMAGE when right clicked
             self.flag_label = Label(self, image=flag_image)
 
