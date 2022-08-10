@@ -37,32 +37,33 @@ class MineSweeperDriver():
         # initializes the numerical grid by creating instance of Grid class
         self.model_grid = Grid((dif_number+1)*15, 45*((dif_number+1)**2))
 
+        for child in self.window.grid_frame.winfo_children():
+            child.destroy()
+
         # initializes the visual grid by creating
         self.visual_grid = np.ndarray(
-            (dif_number, dif_number), dtype=np.dtype(object))
+            ((dif_number+1)*15, (dif_number+1)*15), dtype=np.dtype(object))
 
         self.window.bomb_image = ImageTk.PhotoImage(
             Image.open(BOMB_PATHS[dif_number]))
 
         square_sizes = [50, 27, 18]
 
-        self.window.play_screen()
-
-        for row in range(dif_number):
-            for col in range(dif_number):
+        for row in range((dif_number+1)*15):
+            for col in range((dif_number+1)*15):
                 self.visual_grid[row][col] = Tile(
                     self.window.grid_frame, square_sizes[dif_number], col, row, self)
                 if (row+col) % 2 == 0:  # determine whcih background color to use for the square
                     color = GREEN1
                 else:
                     color = GREEN2
-                print("right here")
 
                 # set the background color fo the square
                 self.visual_grid[row][col].set_bg_color(color)
-                print(self.visual_grid[row][col])
                 self.visual_grid[row][col].grid(
                     row=row, column=col)    # grid the square on screen
+
+        self.window.play_screen()
 
         print("end of play")
 
@@ -84,7 +85,7 @@ class MineSweeperDriver():
                 color = GREEN1
             else:
                 color = GREEN2
-                self.visual_grid[y][x].set_bg_color(color)
+            self.visual_grid[y][x].set_bg_color(color)
 
 
 driver = MineSweeperDriver()

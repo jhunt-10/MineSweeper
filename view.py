@@ -152,8 +152,6 @@ class MineSweeperGUI(Tk):
         print("got here")
 
     def play_screen(self):
-        for child in self.grid_frame.winfo_children():
-            child.destroy()
 
         print("end of play screen")
 
