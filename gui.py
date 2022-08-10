@@ -15,7 +15,10 @@ from tkinter import Tk, Frame, Label, StringVar
 import numpy as np
 from PIL import Image, ImageTk
 from grid import Grid, Square
+from threading import Thread
+from collections import deque
 import datetime
+import time
 
 
 SIZE = 20    # fixed size of grid
@@ -79,6 +82,7 @@ class MineSweeperGUI(Tk):
             self.uncovered_color = ucolor
             self.bomb_image = master.master.master.bomb_image
             self.square = square
+            self.size = size
             self.x = x
             self.y = y
             if self.square.mine == 9:   # if the Square is a mine, have it show * instead of a number to represent a mine
@@ -131,7 +135,8 @@ class MineSweeperGUI(Tk):
                 self.label.grid(sticky="nsew", row=0, column=1)
                 self.square.covered = False
                 if self.square.mine == 9:
-                    self.master.master.master.explosion()
+                    self.master.master.master.explosion(
+                        list(range(self.master.master.master.grid.num_mines)))
                 elif self.square.mine == 0:
                     self.master.master.master.zeros(self)
             elif self.square.mine > 0:
@@ -162,8 +167,8 @@ class MineSweeperGUI(Tk):
                                 neighbors.append(neighbor)
                 if flags == self.square.mine:
                     for neigh in neighbors:
-                        if neigh.reveal():
-                            break
+                        if neigh.square.covered:
+                            neigh.reveal()
 
         def highlight(self):
             if self.square.covered and not self.square.flag:
@@ -200,16 +205,14 @@ class MineSweeperGUI(Tk):
         def reveal(self):
             self.configure(bg=self.uncovered_color)
             if self.square.mine != 9 and self.square.mine != 0:
-                Frame(self, width=4).grid(row=1, column=0)
+                Frame(self, width=4, height=self.size/6).grid(row=1, column=0)
             elif self.square.mine == 9:
-                self.master.master.master.explosion()
-                return True
+                self.master.master.master.explosion(
+                    list(range(self.master.master.master.grid.num_mines)))
             elif self.square.mine == 0:
                 self.master.master.master.zeros(self)
-                return True
             self.label.grid(sticky="nsew", row=0, column=1)
             self.square.covered = False
-            return False
 
         def uncover(self):
             """Method to reveal the value of the square when clicked"""
@@ -218,7 +221,8 @@ class MineSweeperGUI(Tk):
                     self.flag_label.grid_forget()
                 self.configure(bg=self.uncovered_color)
                 if self.square.mine != 9 and self.square.mine != 0:
-                    Frame(self, width=4).grid(row=1, column=0)
+                    Frame(self, width=4, height=self.size /
+                          6).grid(row=1, column=0)
                 self.label.grid(sticky="nsew", row=0, column=1)
                 self.square.covered = False
 
@@ -255,7 +259,6 @@ class MineSweeperGUI(Tk):
         self.title("Mine Sweeper")  # sets the title of the window
         # constrains the size of the window
         self.geometry(f"{WINDOW_SIZE+400}x{WINDOW_SIZE}")
-        # create 2-d array to represnet the x and y values of each mine
         self.grid = None
         self.tiles = None
         self.flag_place = 0
@@ -322,6 +325,7 @@ class MineSweeperGUI(Tk):
         self.timer_view.set(str(time))
 
     def play(self, num, dif_number):
+        start_time = time.perf_counter_ns()
         for child in self.winfo_children():
             child.destroy()
         self.bomb_image = ImageTk.PhotoImage(
@@ -349,26 +353,40 @@ class MineSweeperGUI(Tk):
         self.grid_frame.grid(column=0, row=0, sticky="nw")
         self.menu_frame.grid(column=1, row=0)
         self.menu_frame.grid_propagate(False)
+        if dif_number == 0:
+            self.sq_size = 50
+        else:
+            self.sq_size = SQUARE_SIZE*(
+                3-dif_number) + 10
 
         for row in range(num):
             for col in range(num):
                 if dif_number == 0:
                     dif_number = -2
-                self.tiles[row][col] = self.Tile(self.grid_frame, SQUARE_SIZE*(
-                    3-dif_number) + 10, col, row, self.flag_image, self.grid.grid[row][col], dif_number)
+                self.tiles[row][col] = self.Tile(
+                    self.grid_frame, self.sq_size, col, row, self.flag_image, self.grid.grid[row][col], dif_number)
                 self.tiles[row][col].grid(row=row, column=col)
 
-    def explosion(self):
-        """Method to uncover every mine in the grid if one mine is clicked on."""
-        for i in range(self.grid.num_mines):  # iterate through the total number of mines
+        print("time since epoch", (time.perf_counter_ns() - start_time)/1000000000)
 
+    def explosion(self, mines):
+        if len(mines) == 0:
+            self.update()
+            return
+        """Method to uncover every mine in the grid if one mine is clicked on."""
+        # add unbinding feature so you cannot click on anything when this is running
+        # iterate through the total number of mines
+        for i in mines:
             # get the x value for the mine at the given iteration
             x_val = self.grid.mines[0][i]
             # get the y value for the same mine
             y_val = self.grid.mines[1][i]
-
-            # uncover the square at the given x and y values
             self.tiles[y_val][x_val].uncover()
+            self.tiles[y_val][x_val]
+            self.update()
+
+            self.after(150)
+        return
 
         # TODO Add animation to this method so that the mines are uncover in a cool, explosive manner
 
@@ -377,10 +395,12 @@ class MineSweeperGUI(Tk):
         visited = set()
         x_change = [-1, 1, 0]
         y_change = [-1, 1, 0]
-
-        def bfs(node):
-            if node in visited:
-                return
+        queue = deque()
+        queue.append(square.square)
+        while len(queue) > 0:
+            node = queue.pop()
+            self.tiles[node.y][node.x].uncover()
+            self.update()
             for row in y_change:
                 for col in x_change:
                     try:
@@ -392,10 +412,9 @@ class MineSweeperGUI(Tk):
                         if node.y + row < 0 or node.x + col < 0:
                             pass
                         elif neighbor.square.mine == 0:
-                            neighbor.uncover()
                             visited.add(node)
-                            bfs(neighbor.square)
+                            if neighbor.square not in visited:
+                                queue.append(neighbor.square)
                         elif neighbor.square.mine != 9:
                             neighbor.uncover()
-
-        bfs(square.square)
+            self.after(9)

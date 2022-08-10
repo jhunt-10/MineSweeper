@@ -11,6 +11,9 @@ class Square():
         self.covered = True
         self.flag = False
 
+    def __str__(self):
+        return f"{self.mine}, ({self.x}, {self.y})"
+
     def flagger(self, flag):
         self.flag = flag
 
@@ -30,9 +33,23 @@ class Grid():
         self.total_flags = 0
         # initialize the grid, a SIZE by SIZE 2-d array. The grid should be indexed self.grid[y][x] -> some Square instance at point (x,y)
         self.grid = np.ndarray((size, size), dtype=np.dtype(object))
+        for row in np.nditer(np.arange(size)):  # iterate through each row
+            # iterate through each column
+            for col in np.nditer(np.arange(size)):
+
+                # at each iteration (each square), check if the point is not a mine
+                #   # counter for # of neighbors that are mines
+                # check each neighbor that has one of 3 different changes in y value
+                # exit the loop if the change for x and y is both 0 (the current square)
+
+                # when finsihed looking at all 8 neighbors, add a reference in the 2-d array to a new Square instance with the discovered prope
+                self.grid[row.item()][col.item()] = Square(
+                    0, col.item(), row.item())
 
         # creates mines at random
-        for i in range(num_mines):
+        x_change = np.asarray([-1, 1, 0])
+        y_change = np.asarray([-1, 1, 0])
+        for i in np.nditer(np.arange(num_mines)):
             rand_x = random.randint(0, size-1)  # gives mine a random x value
             rand_y = random.randint(0, size-1)  # gives mine a random y value
             # in the 2-d array self.mines, the array at row 0 will hold the x-values for each mine
@@ -54,35 +71,20 @@ class Grid():
             # add a Square instance of the mine to the grid at its respective x and y
             self.grid[self.mines[1][i]][self.mines[0][i]] = Square(
                 9, self.mines[0][i], self.mines[1][i])
-
-        x_change = [-1, 1, 0]
-        y_change = [-1, 1, 0]
-        for row in range(size):  # iterate through each row
-            for col in range(size):     # iterate through each column
-
-                # at each iteration (each square), check if the point is not a mine
-                if (col, row) not in self.placed:
-                    neighbors = 0  # counter for # of neighbors that are mines
-                    for x_val in x_change:      # check the neighbors that have the 3 different changes in x value
-                        for y_val in y_change:      # check each neighbor that has one of 3 different changes in y value
-                            # exit the loop if the change for x and y is both 0 (the current square)
-                            if x_val == 0 and y_val == 0:
-                                break
-                            try:
-                                # store square in temporary variable to first check if the indices are valid
-                                temp = self.grid[row+y_val][col+x_val]
-                            # if invalid indices do nothing
-                            except:
-                                pass
-                            else:
-                                if temp is None:    # if the indices are valid but the value in the 2-d array has not been given a square yet, do nothing
-                                    pass
-                                elif col + x_val < 0 or row + y_val < 0:
-                                    pass
-                                elif temp.mine == 9:        # if the indices are valid and the mine value of the square at the indices in teh 2-d array is 9, increment neighbors
-                                    neighbors += 1
-                    # when finsihed looking at all 8 neighbors, add a reference in the 2-d array to a new Square instance with the discovered properties
-                    self.grid[row][col] = Square(neighbors, col, row)
+            for x_val in np.nditer(x_change):
+                for y_val in np.nditer(y_change):
+                    if x_val == 0 and y_val == 0:
+                        break
+                    try:
+                        neighbor = self.grid[self.mines[1]
+                                             [i] + y_val][self.mines[0][i] + x_val]
+                    except:
+                        continue
+                    else:
+                        if self.mines[1][i] + y_val < 0 or self.mines[0][i] + x_val < 0:
+                            continue
+                        elif neighbor.mine != 9:
+                            neighbor.mine += 1
 
     def get_square(self, x, y):
         """Method to return square at given x and y"""
