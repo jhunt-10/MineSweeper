@@ -1,4 +1,4 @@
-from gui import MineSweeperGUI
+from view import MineSweeperGUI
 
 
 window = MineSweeperGUI()

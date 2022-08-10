@@ -1,6 +1,8 @@
 import random
 import numpy as np
 
+# many lines of code that initialize grid
+
 
 class Square():
 
@@ -16,6 +18,10 @@ class Square():
 
     def flagger(self, flag):
         self.flag = flag
+
+
+def setup_board(size):
+    num_mines = size
 
 
 class Grid():
