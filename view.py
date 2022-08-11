@@ -137,7 +137,7 @@ class MineSweeperGUI(Tk):
             holder.bind("<Leave>", lambda event,
                         obj=holder: self.unhighlight_button(obj))
 
-            # event that changes handles click on one of three difficulty buttons
+            # event that handles click on one of three difficulty buttons
             # this event effects both the model and the view
             # the model should be initialized after this event and a new page in the view called play should be displayed
             # because the event requires driving multiple facets of the program, function of the driver is called-
@@ -152,7 +152,9 @@ class MineSweeperGUI(Tk):
         print("got here")
 
     def play_screen(self):
-
+        self.menu_frame = Frame(self.body, height=900,
+                                width=200, bg=MENU_COLOR)
+        self.menu_frame.grid(column=1)
         print("end of play screen")
 
     """
