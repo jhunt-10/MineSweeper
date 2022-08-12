@@ -58,6 +58,8 @@ class MineSweeperDriver():
                 else:
                     color = GREEN2
 
+                self.visual_grid[row][col].grid_propagate(False)
+
                 # set the background color fo the square
                 self.visual_grid[row][col].set_bg_color(color)
                 self.visual_grid[row][col].grid(
