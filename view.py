@@ -157,6 +157,9 @@ class MineSweeperGUI(Tk):
         self.menu_frame.grid(column=1)
         print("end of play screen")
 
+    def main(self):
+        self.mainloop()
+
     """
     def update_flags(self, increment):
         self.flag_place += increment
