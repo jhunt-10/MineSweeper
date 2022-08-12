@@ -20,6 +20,9 @@ class Square():
         self.flag = flag
 
 
+
+
+
 def setup_board(size):
     num_mines = size
 
@@ -95,3 +98,36 @@ class Grid():
     def get_square(self, x, y):
         """Method to return square at given x and y"""
         return self.grid[y][x]
+
+    def getNeighbors(self, square):
+        neighbors = np.ndarray((1,8), np.dtype(object))
+
+        x_change = [-1, 0, 1]
+        y_change = [-1, 0, 1]
+        current_x = square.x
+        current_y = square.y
+        index = 0
+
+        for x in x_change:
+            for y in y_change:
+                new_x = current_x + x
+                new_y = current_y + y
+                if not self.isValidIndex(new_x, new_y):
+                    continue
+                if x == 0 and y == 0:
+                    continue
+                neighbors[0][index] = self.get_square(new_x, new_y)
+                index += 1
+
+        return neighbors
+
+    def isValidIndex(self, x, y):
+        if 0 <= x < self.size and 0 <= y < self.size:
+            return True
+        else:
+            return False
+
+
+grid = Grid(10, 10)
+a = grid.getNeighbors(grid.grid[0][0])
+print(a)

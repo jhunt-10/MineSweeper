@@ -1,4 +1,4 @@
-"""Driver module
++"""Driver module
 
 Drives all processes in view and model modules"""
 from view import MineSweeperGUI, Tile
@@ -24,11 +24,7 @@ class MineSweeperDriver():
     def __init__(self):
         # initialize tkinter window by intitializing an instance of MineSweeperGUI
         self.window = MineSweeperGUI(self)
-        # run the inifinite that shows the window until closed
-        self.window.mainloop()
 
-        self.model_grid = None
-        self.visual_grid = None
 
     def play(self, dif_number):
         """Method that drives the play
